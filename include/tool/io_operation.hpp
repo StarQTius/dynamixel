@@ -110,12 +110,18 @@ public:
     for (size_t j = 0; j < size; j++) write(array[j], i + j * sizeof(element_t), m_endianess);
   }
 
+  //
+  const byte_t* raw_data() const { return raw_data; }
+
 private:
   byte_t m_raw_data[N];
   Endianess m_endianess;
 
 };
 
+//
+//
+//
 template<>
 class UnalignedData<0> {
 public:
@@ -125,6 +131,7 @@ public:
   UnalignedData(const byte_t*, Endianess) {}
 };
 
+//
 template<size_t N>
 UnalignedData<N> make_unaligned_data(const byte_t (&raw_data)[N], Endianess endianess) {
   return UnalignedData<N>{raw_data, endianess};
@@ -160,7 +167,7 @@ public:
 
   //
   template<size_t I>
-  auto get()
+  auto get() const
     -> decltype(UnalignedData<size>::template interpret_as<arg_t<I>>(0)) {
     constexpr auto offset = ctm::slist<sizeof(Ts)...>{}
       .take(ctm::size_h<I>{})
@@ -188,6 +195,9 @@ private:
 
 };
 
+//
+//
+//
 template<>
 class UnalignedArguments<> : UnalignedData<0> {
 public:
@@ -196,6 +206,7 @@ public:
   UnalignedArguments(Stream&, Endianess) {}
 };
 
+//
 template<typename... Args>
 UnalignedArguments<Args...> make_unaligned_arguments(Endianess endianess, const Args&... args) {
   return UnalignedArguments<Args...>{endianess, args...};
