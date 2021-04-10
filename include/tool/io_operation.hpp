@@ -200,11 +200,3 @@ template<typename... Args>
 UnalignedArguments<Args...> make_unaligned_arguments(Endianess endianess, const Args&... args) {
   return UnalignedArguments<Args...>{endianess, args...};
 }
-
-//
-template<typename T>
-void insert(Stream& stream, const T& value) {
-  union ByteRep { T base; byte_t raw[sizeof(T)]; };
-  auto& byte_rep = reinterpret_cast<const ByteRep&>(value);
-  for (auto byte : byte_rep.raw) stream.write(byte);
-}
