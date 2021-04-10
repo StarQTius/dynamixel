@@ -51,72 +51,88 @@ template<size_t N>
 class UnalignedData {
 public:
   //
-  UnalignedData() = default;
+  UnalignedData(Endianess endianess) : m_endianess{endianess} {};
 
   //
-  UnalignedData(byte_t raw_data[N]) : raw_data{raw_data} {}
+  UnalignedData(const byte_t* raw_data, Endianess endianess) : m_endianess{endianess} {
+    memcpy(m_raw_data, raw_data, N);
+  }
 
   //
-  UnalignedData(Stream& stream) : raw_data{0} {
-    for (auto& byte : raw_data) byte = stream.read();
+  UnalignedData(Stream& stream, Endianess endianess) : m_raw_data{0}, m_endianess{endianess} {
+    for (auto& byte : m_raw_data) byte = stream.read();
   }
 
   //
   template<typename T>
-  auto interpret_as(ctm::type_h<T>, size_t i, Endianess target_endianess) const
+  auto interpret_as(size_t i) const
     -> ctm::enable_t<ctm::category::integer.has(ctm::type_h<T>{}), T> {
     alignas(T) byte_t byte_rep[sizeof(T)];
-    if (platform_endianess == target_endianess)
-      memcpy(byte_rep, raw_data + i, sizeof(T));
+    if (platform_endianess == m_endianess)
+      memcpy(byte_rep, m_raw_data + i, sizeof(T));
     else
-      detail::rmemcpy(byte_rep, raw_data + i, sizeof(T));
+      detail::rmemcpy(byte_rep, m_raw_data + i, sizeof(T));
     return *reinterpret_cast<T*>(byte_rep);
   }
 
   //
   template<typename T>
-  auto interpret_as(ctm::type_h<T>, size_t i, Endianess target_endianess) const
+  auto interpret_as(size_t i) const
     -> ctm::enable_t<
       ctm::is_array<T>::value,
       detail::array_wrapper<ctm::element_t<T>, ctm::introspect_array<T>::size>> {
-    using Element = ctm::element_t<T>;
-    constexpr auto Size = ctm::introspect_array<T>::size;
+    using element_t = ctm::element_t<T>;
+    constexpr auto size = ctm::introspect_array<T>::size;
 
-    detail::array_wrapper<Element, Size> array_wrapper;
-    for (size_t j = 0; j < Size; j++)
-      array_wrapper[j] = interpret_as<Element>(i + j * sizeof(Element), target_endianess);
+    detail::array_wrapper<element_t, size> array_wrapper;
+    for (size_t j = 0; j < size; j++)
+      array_wrapper[j] = interpret_as<element_t>(i + j * sizeof(element_t));
 
     return array_wrapper;
   }
 
   //
   template<typename T>
-  auto set(const T& x, size_t i, Endianess target_endianess)
+  auto write(const T& x, size_t i)
     -> ctm::enable_t<ctm::category::integer.has(ctm::type_h<T>{})> {
-    if (platform_endianess == target_endianess)
-      memcpy(raw_data + i, reinterpret_cast<const void*>(&x), sizeof(T));
+    if (platform_endianess == m_endianess)
+      memcpy(m_raw_data + i, reinterpret_cast<const void*>(&x), sizeof(T));
     else
-      detail::rmemcpy(raw_data + i, reinterpret_cast<const byte_t*>(&x), sizeof(T));
+      detail::rmemcpy(m_raw_data + i, reinterpret_cast<const byte_t*>(&x), sizeof(T));
   }
 
   //
   template<typename T>
-  auto set(const T& array, size_t i, Endianess target_endianess)
+  auto write(const T& array, size_t i)
     -> ctm::enable_t<ctm::is_array<T>::value> {
-    using Element = ctm::element_t<T>;
-    constexpr auto Size = ctm::introspect_array<T>::size;
-    for (size_t j = 0; j < Size; j++) set(array[j], i + j * sizeof(Element), target_endianess);
+    using element_t = ctm::element_t<T>;
+    constexpr auto size = ctm::introspect_array<T>::size;
+    for (size_t j = 0; j < size; j++) write(array[j], i + j * sizeof(element_t), m_endianess);
   }
 
 private:
-  byte_t raw_data[N];
+  byte_t m_raw_data[N];
+  Endianess m_endianess;
 
 };
 
 template<>
 class UnalignedData<0> {
-  UnalignedData(Stream&) {};
+public:
+  UnalignedData() {}
+  UnalignedData(Endianess) {}
+  UnalignedData(Stream&, Endianess) {}
+  UnalignedData(const byte_t*, Endianess) {}
 };
+
+template<size_t N>
+UnalignedData<N> make_unaligned_data(const byte_t (&raw_data)[N], Endianess endianess) {
+  return UnalignedData<N>{raw_data, endianess};
+}
+template<size_t N>
+UnalignedData<N> make_unaligned_data(byte_t (&&raw_data)[N], Endianess endianess) {
+  return UnalignedData<N>{ctm::move(raw_data), endianess};
+}
 
 //
 //
@@ -127,57 +143,62 @@ class UnalignedArguments : UnalignedData<ctm::sum(sizeof(Ts)...)> {
 
 public:
   template<size_t I>
-  using Arg_t = ctm::grab<decltype(list.pop(ctm::size_h<I>{}).head())>;
+  using arg_t = decltype(list.pop(ctm::size_h<I>{}).head());
   constexpr static auto size = ctm::sum(sizeof(Ts)...);
 
   //
-  template<typename... Args>
-  UnalignedArguments(const Args&... args) : UnalignedData<size>{} {
-    lay(ctm::srange<0, sizeof...(Ts)>{}, FWD(args)...);
+  UnalignedArguments(Endianess endianess) : UnalignedData<size>{endianess} {}
+
+  //
+  template<typename... Args, typename = ctm::enable_t<sizeof...(Args) == sizeof...(Ts)>>
+  UnalignedArguments(Endianess endianess, const Args&... args) : UnalignedData<size>{endianess} {
+    lay(ctm::srange<0, sizeof...(Ts)>{}, args...);
   }
 
   //
-  UnalignedArguments(Stream& stream) : UnalignedData<size>{stream} {}
+  UnalignedArguments(Stream& stream, Endianess endianess) : UnalignedData<size>{stream} {}
 
   //
   template<size_t I>
-  auto get(ctm::size_h<I>)
-    -> decltype(UnalignedData<size>::template interpret_as<Arg_t<I>>(0)) {
+  auto get()
+    -> decltype(UnalignedData<size>::template interpret_as<arg_t<I>>(0)) {
     constexpr auto offset = ctm::slist<sizeof(Ts)...>{}
       .take(ctm::size_h<I>{})
       .accumulate(0, ctm::sum<size_t, size_t>);
 
-    return UnalignedData<size>::template interpret_as<Arg_t<I>>(offset);
+    return UnalignedData<size>::template interpret_as<arg_t<I>>(offset);
+  }
+
+  //
+  template<size_t I>
+  void set(const arg_t<I>& x) {
+    constexpr auto offset = ctm::slist<sizeof(Ts)...>{}
+      .take(ctm::size_h<I>{})
+      .accumulate(0, ctm::sum<size_t, size_t>);
+
+    UnalignedData<size>::write(x, offset);
   }
 
 private:
   //
   template<size_t... Is, typename... Args>
   void lay(ctm::size_h<Is...>, const Args&... args) {
-    ([](const Args&...) {})(lay_one(ctm::size_h<Is>{}, FWD(args))...); // TODO : à changer pour quelque chose de plus propre
-  }
-
-  //
-  template<size_t I, typename T>
-  void lay_one(ctm::size_h<I>, const T& x) {
-    constexpr auto offset = ctm::slist<sizeof(Ts)...>{}
-      .take(ctm::size_h<I>{})
-      .accumulate(0, ctm::sum<size_t, size_t>);
-
-    UnalignedData<size>::set(x, offset, Endianess::big);
+    ([](const Args&...) {})(write(args, ctm::size_h<Is>{})...); // TODO : à changer pour quelque chose de plus propre
   }
 
 };
 
 template<>
-class UnalignedArguments<> {
+class UnalignedArguments<> : UnalignedData<0> {
 public:
-  UnalignedArguments(Stream&) {}
+  UnalignedArguments() {}
+  UnalignedArguments(Endianess) {}
+  UnalignedArguments(Stream&, Endianess) {}
 };
 
 template<typename... Args>
-UnalignedArguments<Args...> make_unaligned_argument(Args&&... args) {
-
+UnalignedArguments<Args...> make_unaligned_arguments(Endianess endianess, const Args&... args) {
+  return UnalignedArguments<Args...>{endianess, args...};
 }
 
 //
