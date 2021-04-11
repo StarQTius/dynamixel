@@ -5,7 +5,7 @@
 void setup() {
   UNITY_BEGIN();
 
-  TEST_MESSAGE(platform_endianess == Endianess::little ?
+  TEST_MESSAGE(dxl::tool::platform_endianess == dxl::tool::Endianess::little ?
     "La platforme utilise le petit-boutisme" : "La platforme utilise le gros-boutisme");
 
   RUN_TEST(write_and_interpret_in_unaligned_data_little_endian);

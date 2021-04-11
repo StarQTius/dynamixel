@@ -1,3 +1,3 @@
 #include "tool/endianess.hpp"
 
-Endianess platform_endianess = get_endianess();
+dxl::tool::Endianess dxl::tool::platform_endianess = dxl::tool::get_endianess();

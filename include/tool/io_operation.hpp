@@ -9,6 +9,8 @@
 /***********************************************************************************************************************
 ***********************************************************************************************************************/
 
+namespace dxl::tool {
+
 using byte_t = uint8_t;
 
 namespace detail {
@@ -266,3 +268,5 @@ template<typename... Args>
 UnalignedArguments<Args...> make_unaligned_arguments(Endianess endianess, const Args&... args) {
   return UnalignedArguments<Args...>{endianess, args...};
 }
+
+} // namespace dxl::tool
