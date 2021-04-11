@@ -50,6 +50,51 @@ inline void rmemcpy(byte_t* dest, const byte_t* src, size_t len) {
 template<size_t N>
 class UnalignedData {
 public:
+  constexpr static auto size = N;
+
+  //
+  class iterator {
+  public:
+    iterator() : ptr{nullptr} {}
+    iterator(byte_t* ptr) : ptr{ptr} {}
+
+    iterator operator++() {
+      iterator previous;
+      previous.ptr = ptr;
+      ptr++;
+      return previous;
+    }
+
+    byte_t& operator*() { return *ptr; }
+    const byte_t& operator*() const { return *ptr; }
+
+    bool operator!=(const iterator& other) { return ptr == other.ptr; }
+
+  private:
+    byte_t* ptr;
+
+  };
+
+  //
+  class const_iterator {
+  public:
+    const_iterator() : ptr{nullptr} {}
+    const_iterator(const byte_t* ptr) : ptr{ptr} {}
+
+    const_iterator operator++() {
+      const_iterator previous;
+      previous.ptr = ptr;
+      ptr++;
+      return previous;
+    }
+
+    const byte_t& operator*() const { return *ptr; }
+
+  private:
+    const byte_t* ptr;
+
+  };
+
   //
   UnalignedData(Endianess endianess) : m_endianess{endianess} {};
 
@@ -62,6 +107,16 @@ public:
   UnalignedData(Stream& stream, Endianess endianess) : m_raw_data{0}, m_endianess{endianess} {
     for (auto& byte : m_raw_data) byte = stream.read();
   }
+
+  //
+  const iterator begin() { return iterator{m_raw_data}; }
+  const iterator end() { return iterator{m_raw_data + N}; }
+  const const_iterator begin() const { return const_iterator{m_raw_data}; }
+  const const_iterator end() const { return const_iterator{m_raw_data + N}; }
+
+  //
+  byte_t& operator[](size_t i) { return raw_data[i]; }
+  const byte_t& operator[](size_t i) const { return raw_data[i]; }
 
   //
   template<typename T>
@@ -82,10 +137,10 @@ public:
       ctm::is_array<T>::value,
       detail::array_wrapper<ctm::element_t<T>, ctm::introspect_array<T>::size>> {
     using element_t = ctm::element_t<T>;
-    constexpr auto size = ctm::introspect_array<T>::size;
+    constexpr auto array_size = ctm::introspect_array<T>::size;
 
     detail::array_wrapper<element_t, size> array_wrapper;
-    for (size_t j = 0; j < size; j++)
+    for (size_t j = 0; j < array_size; j++)
       array_wrapper[j] = interpret_as<element_t>(i + j * sizeof(element_t));
 
     return array_wrapper;
@@ -106,8 +161,8 @@ public:
   auto write(const T& array, size_t i)
     -> ctm::enable_t<ctm::is_array<T>::value> {
     using element_t = ctm::element_t<T>;
-    constexpr auto size = ctm::introspect_array<T>::size;
-    for (size_t j = 0; j < size; j++) write(array[j], i + j * sizeof(element_t), m_endianess);
+    constexpr auto array_size = ctm::introspect_array<T>::size;
+    for (size_t j = 0; j < array_size; j++) write(array[j], i + j * sizeof(element_t));
   }
 
   //

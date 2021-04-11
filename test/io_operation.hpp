@@ -24,3 +24,10 @@ inline void set_and_get_in_unaligned_arguments_big_endian() {
   unaligned_arguments.set<2>(0xabcd);
   TEST_ASSERT_EQUAL(0xabcd, unaligned_arguments.get<2>());
 }
+
+inline void iterate_unaligned_data() {
+  byte_t raw_data[] {0xaa, 0xbb, 0xcc};
+  UnalignedData<4> unaligned_data{raw_data, Endianess::little};
+  size_t i = 0;
+  for (auto byte : unaligned_data) TEST_ASSERT_EQUAL(raw_data[i++], byte);
+}
