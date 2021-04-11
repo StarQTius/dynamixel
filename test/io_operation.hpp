@@ -1,7 +1,7 @@
 #include "tool/io_operation.hpp"
 #include <unity.h>
 
-inline void write_and_interpret_in_unaligned_data_little_endian() {
+inline void io_operation_write_and_interpret_little_endian() {
   using namespace dxl::tool;
 
   UnalignedData<4 * sizeof(uint16_t)> unaligned_data{Endianess::little};
@@ -9,7 +9,7 @@ inline void write_and_interpret_in_unaligned_data_little_endian() {
   TEST_ASSERT_EQUAL_UINT16(0xabcd, unaligned_data.interpret_as<uint16_t>(sizeof(uint16_t)));
 }
 
-inline void write_and_interpret_in_unaligned_data_big_endian() {
+inline void io_operation_write_and_interpret_in_unaligned_data_big_endian() {
   using namespace dxl::tool;
 
   UnalignedData<4 * sizeof(uint16_t)> unaligned_data{Endianess::big};
@@ -17,7 +17,7 @@ inline void write_and_interpret_in_unaligned_data_big_endian() {
   TEST_ASSERT_EQUAL_UINT16(0xabcd, unaligned_data.interpret_as<uint16_t>(sizeof(uint16_t)));
 }
 
-inline void set_and_get_in_unaligned_arguments_little_endian() {
+inline void io_operation_set_and_get_in_unaligned_arguments_little_endian() {
   using namespace dxl::tool;
 
   UnalignedArguments<int, char, long, bool> unaligned_arguments{Endianess::little};
@@ -25,7 +25,7 @@ inline void set_and_get_in_unaligned_arguments_little_endian() {
   TEST_ASSERT_EQUAL(0xabcd, unaligned_arguments.get<2>());
 }
 
-inline void set_and_get_in_unaligned_arguments_big_endian() {
+inline void io_operation_set_and_get_in_unaligned_arguments_big_endian() {
   using namespace dxl::tool;
 
   UnalignedArguments<int, char, long, bool> unaligned_arguments{Endianess::big};
@@ -33,7 +33,7 @@ inline void set_and_get_in_unaligned_arguments_big_endian() {
   TEST_ASSERT_EQUAL(0xabcd, unaligned_arguments.get<2>());
 }
 
-inline void iterate_unaligned_data() {
+inline void io_operation_iterate_unaligned_data() {
   using namespace dxl::tool;
 
   byte_t raw_data[] {0xaa, 0xbb, 0xcc};
