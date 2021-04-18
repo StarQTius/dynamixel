@@ -68,10 +68,8 @@ public:
       return previous;
     }
 
-    byte_t& operator*() { return *ptr; }
-    const byte_t& operator*() const { return *ptr; }
-
-    bool operator!=(const iterator& other) { return ptr == other.ptr; }
+    byte_t& operator*() const { return *ptr; }
+    bool operator!=(const iterator& other) const { return ptr != other.ptr; }
 
   private:
     byte_t* ptr;
@@ -92,6 +90,7 @@ public:
     }
 
     const byte_t& operator*() const { return *ptr; }
+    bool operator!=(const iterator& other) const { return ptr != other.ptr; }
 
   private:
     const byte_t* ptr;
@@ -250,7 +249,7 @@ private:
   void lay(ctm::size_h<Is...>, const Args&... args) {
      // TODO : à changer pour quelque chose de plus propre
      using discard = int[];
-     discard {0, (UnalignedData<size>::write(args, ctm::size_h<Is>{}), 0)...};
+     discard {0, (set<Is>(args), 0)...};
   }
 
 };

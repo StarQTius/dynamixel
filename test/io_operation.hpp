@@ -38,6 +38,7 @@ inline void io_operation_iterate_unaligned_data() {
 
   byte_t raw_data[] {0xaa, 0xbb, 0xcc};
   UnalignedData<sizeof(raw_data)> unaligned_data{raw_data, Endianess::little};
+  TEST_ASSERT_TRUE(unaligned_data.begin() != unaligned_data.end());
   size_t i = 0;
   for (auto byte : unaligned_data) TEST_ASSERT_EQUAL_UINT16(raw_data[i++], byte);
 }
@@ -46,12 +47,13 @@ inline void io_operation_iterate_unaligned_arguments() {
   using namespace dxl::tool;
 
   byte_t raw_data[] {0xaa, 0xcc, 0xbb, 0x00, 0xff, 0xee, 0xdd};
-  UnalignedArguments<uint8_t, uint16_t, uint32_t> unaligned_data{Endianess::little, 0xaa, 0xbbcc, 0xddeeff00};
+  UnalignedArguments<uint8_t, uint16_t, uint32_t> unaligned_arguments{Endianess::little, 0xaa, 0xbbcc, 0xddeeff00};
+  TEST_ASSERT_TRUE(unaligned_arguments.begin() != unaligned_arguments.end());
   size_t i = 0;
-  for (auto byte : unaligned_data) TEST_ASSERT_EQUAL_UINT16(raw_data[i++], byte);
+  for (auto byte : unaligned_arguments) TEST_ASSERT_EQUAL_UINT16(raw_data[i++], byte);
 }
 
-inline void io_operation_serialize_with_unaligned_arguments() {
+inline void io_operation_access_raw_data() {
   using namespace dxl::tool;
 
   byte_t raw_data[] {0xaa, 0xbb, 0xcc, 0xdd};
