@@ -9,7 +9,8 @@
 /***********************************************************************************************************************
 ***********************************************************************************************************************/
 
-namespace dxl::tool {
+namespace dxl {
+namespace tool {
 
 using byte_t = uint8_t;
 
@@ -124,12 +125,12 @@ public:
   template<typename T>
   auto interpret_as(size_t i) const
     -> ctm::enable_t<ctm::category::integer.has(ctm::type_h<T>{}), T> {
-    alignas(T) byte_t byte_rep[sizeof(T)];
+    union { T base; byte_t raw[sizeof(T)]; } byte_rep;
     if (platform_endianess == m_endianess)
-      memcpy(byte_rep, m_raw_data + i, sizeof(T));
+      memcpy(byte_rep.raw, m_raw_data + i, sizeof(T));
     else
-      detail::rmemcpy(byte_rep, m_raw_data + i, sizeof(T));
-    return *reinterpret_cast<T*>(byte_rep);
+      detail::rmemcpy(byte_rep.raw, m_raw_data + i, sizeof(T));
+    return byte_rep.base;
   }
 
   //
@@ -168,7 +169,7 @@ public:
   }
 
   //
-  const byte_t* raw_data() const { return raw_data; }
+  const byte_t* raw_data() const { return m_raw_data; }
 
 private:
   byte_t m_raw_data[N];
@@ -202,12 +203,12 @@ UnalignedData<N> make_unaligned_data(byte_t (&&raw_data)[N], Endianess endianess
 //
 //
 template<typename... Ts>
-class UnalignedArguments : UnalignedData<ctm::sum(sizeof(Ts)...)> {
+class UnalignedArguments : public UnalignedData<ctm::sum(sizeof(Ts)...)> {
   constexpr static auto list = ctm::typelist<Ts...>{};
 
 public:
   template<size_t I>
-  using arg_t = decltype(list.pop(ctm::size_h<I>{}).head());
+  using arg_t = ctm::grab<decltype(list.get(ctm::size_h<I>{}))>;
   constexpr static auto size = ctm::sum(sizeof(Ts)...);
 
   //
@@ -225,7 +226,7 @@ public:
   //
   template<size_t I>
   auto get() const
-    -> decltype(UnalignedData<size>::template interpret_as<arg_t<I>>(0)) {
+    -> decltype(ctm::declval<UnalignedData<size>>().template interpret_as<arg_t<I>>(0)) {
     constexpr auto offset = ctm::slist<sizeof(Ts)...>{}
       .take(ctm::size_h<I>{})
       .accumulate(0, ctm::sum<size_t, size_t>);
@@ -247,7 +248,9 @@ private:
   //
   template<size_t... Is, typename... Args>
   void lay(ctm::size_h<Is...>, const Args&... args) {
-    ([](const Args&...) {})(write(args, ctm::size_h<Is>{})...); // TODO : à changer pour quelque chose de plus propre
+     // TODO : à changer pour quelque chose de plus propre
+     using discard = int[];
+     discard {0, (UnalignedData<size>::write(args, ctm::size_h<Is>{}), 0)...};
   }
 
 };
@@ -269,4 +272,5 @@ UnalignedArguments<Args...> make_unaligned_arguments(Endianess endianess, const 
   return UnalignedArguments<Args...>{endianess, args...};
 }
 
-} // namespace dxl::tool
+} // namespace tool
+} // namespace dxl

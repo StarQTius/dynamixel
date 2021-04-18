@@ -2,7 +2,8 @@
 
 #include <Arduino.h>
 
-namespace dxl::tool {
+namespace dxl {
+namespace tool {
 
 enum class Endianess { little, big };
 extern Endianess platform_endianess;
@@ -13,4 +14,5 @@ inline Endianess get_endianess() {
   return (*reinterpret_cast<uint8_t*>(&word) == 0xff ? Endianess::big : Endianess::little );
 }
 
-} // namespace dxl::tool
+} // namespace tool
+} // namespace dxl
