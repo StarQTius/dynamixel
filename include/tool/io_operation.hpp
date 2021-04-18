@@ -112,10 +112,10 @@ public:
   }
 
   //
-  const iterator begin() { return iterator{m_raw_data}; }
-  const iterator end() { return iterator{m_raw_data + N}; }
-  const const_iterator begin() const { return const_iterator{m_raw_data}; }
-  const const_iterator end() const { return const_iterator{m_raw_data + N}; }
+  const iterator begin() { return {m_raw_data}; }
+  const iterator end() { return {m_raw_data + N}; }
+  const const_iterator begin() const { return {m_raw_data}; }
+  const const_iterator end() const { return {m_raw_data + N}; }
 
   //
   byte_t& operator[](size_t i) { return raw_data[i]; }
