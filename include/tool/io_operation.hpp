@@ -19,7 +19,8 @@ namespace detail {
 template<typename T, size_t N>
 struct array_wrapper {
   array_wrapper() = default;
-  array_wrapper(const T* ptr) { memcpy(content, ptr, N); }
+
+  explicit array_wrapper(const T* ptr) { memcpy(content, ptr, N); }
 
   T& operator[](size_t i) { return content[i]; }
   T& operator*() { return *content; }
@@ -56,7 +57,8 @@ public:
   class iterator {
   public:
     iterator() : ptr{nullptr} {}
-    iterator(uint8_t* ptr) : ptr{ptr} {}
+
+    explicit iterator(uint8_t* ptr) : ptr{ptr} {}
 
     iterator operator++() {
       iterator previous;
@@ -77,7 +79,8 @@ public:
   class const_iterator {
   public:
     const_iterator() : ptr{nullptr} {}
-    const_iterator(const uint8_t* ptr) : ptr{ptr} {}
+
+    explicit const_iterator(const uint8_t* ptr) : ptr{ptr} {}
 
     const_iterator operator++() {
       const_iterator previous;
@@ -95,23 +98,23 @@ public:
   };
 
   //
-  UnalignedData(Endianess endianess) : m_endianess{endianess} {};
+  explicit UnalignedData(Endianess endianess) : m_endianess{endianess} {};
 
   //
-  UnalignedData(const uint8_t* raw_data, Endianess endianess) : m_endianess{endianess} {
+  explicit UnalignedData(const uint8_t* raw_data, Endianess endianess) : m_endianess{endianess} {
     memcpy(m_raw_data, raw_data, N);
   }
 
   //
-  UnalignedData(Stream& stream, Endianess endianess) : m_raw_data{0}, m_endianess{endianess} {
+  explicit UnalignedData(Stream& stream, Endianess endianess) : m_raw_data{0}, m_endianess{endianess} {
     for (auto& byte : m_raw_data) byte = stream.read();
   }
 
   //
-  const iterator begin() { return {m_raw_data}; }
-  const iterator end() { return {m_raw_data + N}; }
-  const const_iterator begin() const { return {m_raw_data}; }
-  const const_iterator end() const { return {m_raw_data + N}; }
+  const iterator begin() { return iterator{m_raw_data}; }
+  const iterator end() { return iterator{m_raw_data + N}; }
+  const const_iterator begin() const { return const_iterator{m_raw_data}; }
+  const const_iterator end() const { return const_iterator{m_raw_data + N}; }
 
   //
   uint8_t& operator[](size_t i) { return raw_data[i]; }
@@ -180,9 +183,10 @@ template<>
 class UnalignedData<0> {
 public:
   UnalignedData() {}
-  UnalignedData(Endianess) {}
-  UnalignedData(Stream&, Endianess) {}
-  UnalignedData(const uint8_t*, Endianess) {}
+
+  explicit UnalignedData(Endianess) {}
+  explicit UnalignedData(Stream&, Endianess) {}
+  explicit UnalignedData(const uint8_t*, Endianess) {}
 };
 
 //
@@ -208,7 +212,7 @@ public:
   constexpr static auto size = ctm::sum(sizeof(Ts)...);
 
   //
-  UnalignedArguments(Endianess endianess) : UnalignedData<size>{endianess} {}
+  explicit UnalignedArguments(Endianess endianess) : UnalignedData<size>{endianess} {}
 
   //
   template<typename... Args, typename = ctm::enable_t<sizeof...(Args) == sizeof...(Ts)>>
@@ -217,7 +221,7 @@ public:
   }
 
   //
-  UnalignedArguments(Stream& stream, Endianess endianess) : UnalignedData<size>{stream} {}
+  explicit UnalignedArguments(Stream& stream, Endianess endianess) : UnalignedData<size>{stream} {}
 
   //
   template<size_t I>
@@ -258,8 +262,9 @@ template<>
 class UnalignedArguments<> : UnalignedData<0> {
 public:
   UnalignedArguments() {}
-  UnalignedArguments(Endianess) {}
-  UnalignedArguments(Stream&, Endianess) {}
+
+  explicit UnalignedArguments(Endianess) {}
+  explicit UnalignedArguments(Stream&, Endianess) {}
 };
 
 //
