@@ -1,13 +1,4 @@
-#if defined(NO_ARDUINO)
-[[noreturn]] int main() { setup(); while (true) loop(); return 0 }
-#else
-#include <Arduino.h>
-#endif
-
-#include <unity.h>
-
-#include "byte_stuffing.hpp"
-#include "io_operation.hpp"
+#include "main.hpp"
 
 void setup() {
   UNITY_BEGIN();
