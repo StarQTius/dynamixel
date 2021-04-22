@@ -15,9 +15,9 @@ constexpr uint8_t packet_header[] = {0xff, 0xff, 0xfd, 0x00};
 //
 inline void send_packet(
   Stream& stream,
-  tool::byte_t* buffer,
+  tool::uint8_t* buffer,
   uint8_t id,
-  const tool::byte_t* payload,
+  const tool::uint8_t* payload,
   uint16_t payload_size)
 {
   using namespace tool;
@@ -41,7 +41,7 @@ inline void send_packet(Stream& stream, uint8_t id, Instruction instruction, con
     static_cast<uint8_t>(instruction),
     args...);
   constexpr auto raw_size = decltype(unaligned_arguments)::size;
-  tool::byte_t buffer[4 * (raw_size + 1) / 3];
+  tool::uint8_t buffer[4 * (raw_size + 1) / 3];
   detail::send_packet(stream, buffer, id, unaligned_arguments.raw_data(), raw_size);
 }
 
