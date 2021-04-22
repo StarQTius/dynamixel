@@ -12,7 +12,7 @@ int main() { setup(); return 0; }
 
 #endif // defined(UT_ONLY)
 
-#include <unity.h>
+#include "unity.h"
 
 extern "C" void setUp() {}
 extern "C" void tearDown() {}

@@ -6,7 +6,7 @@ cpp_flags = \
 
 c_flags = \
 	-std=c99 \
-	-Ilib/Unity/src \
+	-Ilib/Unity/src
 
 check: obj/main.o obj/endianess.o obj/unity.o
 	gcc $^ -o run_ut

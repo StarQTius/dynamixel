@@ -1,6 +1,7 @@
 #pragma once
 
 #include "2.0/byte_stuffing.hpp"
+#include "unity.h"
 
 void byte_stuffing_stuff_bytes() {
   using dxl::stuff_bytes;

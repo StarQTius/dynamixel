@@ -1,5 +1,7 @@
+#pragma once
+
 #include "tool/io_operation.hpp"
-#include <unity.h>
+#include "unity.h"
 
 inline void io_operation_write_and_interpret_little_endian() {
   using namespace dxl::tool;
