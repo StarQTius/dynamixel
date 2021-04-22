@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Arduino.h>
+#include "type.hpp"
 
 namespace dxl {
 namespace tool {
@@ -10,8 +10,8 @@ extern Endianess platform_endianess;
 
 //
 inline Endianess get_endianess() {
-  uint16_t word = 0xff00;
-  return (*reinterpret_cast<uint8_t*>(&word) == 0xff ? Endianess::big : Endianess::little );
+  unsigned short word = 0xff00;
+  return (*reinterpret_cast<byte_t*>(&word) == 0xff ? Endianess::big : Endianess::little );
 }
 
 } // namespace tool

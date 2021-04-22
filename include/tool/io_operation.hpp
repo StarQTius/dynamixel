@@ -1,9 +1,8 @@
 #pragma once
 
-#include <Arduino.h>
-
 #include "ct_magic.hpp"
 
+#include "type.hpp"
 #include "endianess.hpp"
 
 /***********************************************************************************************************************
@@ -38,7 +37,7 @@ struct array_wrapper {
 };
 
 //
-inline void rmemcpy(uint8_t* dest, const uint8_t* src, size_t len) {
+inline void rmemcpy(byte_t* dest, const byte_t* src, size_t len) {
   for (size_t i = 0; i < len; i++)
     dest[i] = src[len - i - 1];
 }
@@ -58,7 +57,7 @@ public:
   public:
     iterator() : ptr{nullptr} {}
 
-    explicit iterator(uint8_t* ptr) : ptr{ptr} {}
+    explicit iterator(byte_t* ptr) : ptr{ptr} {}
 
     iterator operator++() {
       iterator previous;
@@ -67,11 +66,11 @@ public:
       return previous;
     }
 
-    uint8_t& operator*() const { return *ptr; }
+    byte_t& operator*() const { return *ptr; }
     bool operator!=(const iterator& other) const { return ptr != other.ptr; }
 
   private:
-    uint8_t* ptr;
+    byte_t* ptr;
 
   };
 
@@ -80,7 +79,7 @@ public:
   public:
     const_iterator() : ptr{nullptr} {}
 
-    explicit const_iterator(const uint8_t* ptr) : ptr{ptr} {}
+    explicit const_iterator(const byte_t* ptr) : ptr{ptr} {}
 
     const_iterator operator++() {
       const_iterator previous;
@@ -89,11 +88,11 @@ public:
       return previous;
     }
 
-    const uint8_t& operator*() const { return *ptr; }
+    const byte_t& operator*() const { return *ptr; }
     bool operator!=(const iterator& other) const { return ptr != other.ptr; }
 
   private:
-    const uint8_t* ptr;
+    const byte_t* ptr;
 
   };
 
@@ -101,13 +100,8 @@ public:
   explicit UnalignedData(Endianess endianess) : m_endianess{endianess} {};
 
   //
-  explicit UnalignedData(const uint8_t* raw_data, Endianess endianess) : m_endianess{endianess} {
+  explicit UnalignedData(const byte_t* raw_data, Endianess endianess) : m_endianess{endianess} {
     memcpy(m_raw_data, raw_data, N);
-  }
-
-  //
-  explicit UnalignedData(Stream& stream, Endianess endianess) : m_raw_data{0}, m_endianess{endianess} {
-    for (auto& byte : m_raw_data) byte = stream.read();
   }
 
   //
@@ -117,14 +111,14 @@ public:
   const const_iterator end() const { return const_iterator{m_raw_data + N}; }
 
   //
-  uint8_t& operator[](size_t i) { return raw_data[i]; }
-  const uint8_t& operator[](size_t i) const { return raw_data[i]; }
+  byte_t& operator[](size_t i) { return raw_data[i]; }
+  const byte_t& operator[](size_t i) const { return raw_data[i]; }
 
   //
   template<typename T>
   auto interpret_as(size_t i) const
     -> ctm::enable_t<ctm::category::integer.has(ctm::type_h<T>{}), T> {
-    union { T base; uint8_t raw[sizeof(T)]; } byte_rep;
+    union { T base; byte_t raw[sizeof(T)]; } byte_rep;
     if (platform_endianess == m_endianess)
       memcpy(byte_rep.raw, m_raw_data + i, sizeof(T));
     else
@@ -155,7 +149,7 @@ public:
     if (platform_endianess == m_endianess)
       memcpy(m_raw_data + i, reinterpret_cast<const void*>(&x), sizeof(T));
     else
-      detail::rmemcpy(m_raw_data + i, reinterpret_cast<const uint8_t*>(&x), sizeof(T));
+      detail::rmemcpy(m_raw_data + i, reinterpret_cast<const byte_t*>(&x), sizeof(T));
   }
 
   //
@@ -168,10 +162,10 @@ public:
   }
 
   //
-  const uint8_t* raw_data() const { return m_raw_data; }
+  const byte_t* raw_data() const { return m_raw_data; }
 
 private:
-  uint8_t m_raw_data[N];
+  byte_t m_raw_data[N];
   Endianess m_endianess;
 
 };
@@ -185,17 +179,16 @@ public:
   UnalignedData() {}
 
   explicit UnalignedData(Endianess) {}
-  explicit UnalignedData(Stream&, Endianess) {}
-  explicit UnalignedData(const uint8_t*, Endianess) {}
+  explicit UnalignedData(const byte_t*, Endianess) {}
 };
 
 //
 template<size_t N>
-UnalignedData<N> make_unaligned_data(const uint8_t (&raw_data)[N], Endianess endianess) {
+UnalignedData<N> make_unaligned_data(const byte_t (&raw_data)[N], Endianess endianess) {
   return UnalignedData<N>{raw_data, endianess};
 }
 template<size_t N>
-UnalignedData<N> make_unaligned_data(uint8_t (&&raw_data)[N], Endianess endianess) {
+UnalignedData<N> make_unaligned_data(byte_t (&&raw_data)[N], Endianess endianess) {
   return UnalignedData<N>{ctm::move(raw_data), endianess};
 }
 
@@ -219,9 +212,6 @@ public:
   UnalignedArguments(Endianess endianess, const Args&... args) : UnalignedData<size>{endianess} {
     lay(ctm::srange<0, sizeof...(Ts)>{}, args...);
   }
-
-  //
-  explicit UnalignedArguments(Stream& stream, Endianess endianess) : UnalignedData<size>{stream} {}
 
   //
   template<size_t I>
@@ -264,7 +254,6 @@ public:
   UnalignedArguments() {}
 
   explicit UnalignedArguments(Endianess) {}
-  explicit UnalignedArguments(Stream&, Endianess) {}
 };
 
 //
