@@ -18,4 +18,3 @@ extern "C" void setUp() {}
 extern "C" void tearDown() {}
 
 #include "byte_stuffing.hpp"
-#include "io_operation.hpp"

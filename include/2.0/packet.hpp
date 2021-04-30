@@ -4,8 +4,9 @@
 
 #include "byte_stuffing.hpp"
 #include "crc.hpp"
-#include "tool/endianess.hpp"
-#include "tool/io_operation.hpp"
+#include "endianess.hpp"
+
+#include "upd/storage.hpp"
 
 namespace dxl {
 namespace detail {
@@ -20,11 +21,11 @@ inline void send_packet(
   const tool::uint8_t* payload,
   uint16_t payload_size)
 {
-  using namespace tool;
+  using namespace upd;
 
   auto inserted_bytes_nb = stuff_bytes(buffer, payload, payload_size);
-  auto first_part = make_unaligned_arguments(Endianess::little, packet_header, id, inserted_bytes_nb + 2);
-  auto crc = make_unaligned_arguments(Endianess::little, compute_crc(buffer, inserted_bytes_nb));
+  auto first_part = make_unaligned_arguments(endianess::little, packet_header, id, inserted_bytes_nb + 2);
+  auto crc = make_unaligned_arguments(endianess::little, compute_crc(buffer, inserted_bytes_nb));
 
   for (auto byte : first_part) stream.write(byte);
   for (size_t i = 0; i < inserted_bytes_nb; i++) stream.write(buffer[i]);

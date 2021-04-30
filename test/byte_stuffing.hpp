@@ -4,7 +4,7 @@
 #include "unity.h"
 
 void byte_stuffing_stuff_bytes() {
-  using dxl::stuff_bytes;
+  using namespace dxl;
 
   uint8_t src[] = {
     0xff, 0xff, 0xff, 0xfd,
