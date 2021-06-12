@@ -41,15 +41,13 @@ constexpr uint16_t crc_table[256] = {
 //
 //
 
-inline uint16_t compute_crc(const uint8_t* payload, size_t length) {
-  uint16_t crc = 0;
-
+inline uint16_t compute_crc(uint16_t accumulator, const uint8_t* payload, size_t length) {
   for (size_t i = 0; i < length; i++) {
-    const auto index = ((crc >> 8u) ^ payload[i]) & 0xffu;
-    crc = (crc << 8u) ^ crc_table[index];
+    const auto index = ((accumulator >> 8u) ^ payload[i]) & 0xffu;
+    accumulator = (accumulator << 8u) ^ crc_table[index];
   }
 
-  return crc;
+  return accumulator;
 }
 
 } // namespace dxl::tool

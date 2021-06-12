@@ -3,7 +3,7 @@
 #include "2.0/byte_stuffing.hpp"
 #include "unity.h"
 
-void byte_stuffing_stuff_bytes() {
+inline void byte_stuffing_stuff_bytes() {
   using namespace dxl;
 
   uint8_t src[] = {
