@@ -2,8 +2,7 @@ cpp_flags = \
 	-std=c++11 \
 	-Iinclude \
 	-Ilib/Unity/src \
-	-Ilib/ct_magic/include \
-	-Ilib/unpadded/include
+	-Ilib/unpadded/include \
 
 c_flags = \
 	-std=c99 \

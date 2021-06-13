@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 
-#include "2.0/instruction.hpp"
-#include "2.0/packet.hpp"
+#include "dxl/2.0/instruction.hpp"
+#include "dxl/2.0/packet.hpp"
 
 SoftwareSerial software_serial{D10, D11};
 uint8_t ADR = 8;
