@@ -17,6 +17,15 @@ c_flags = \
 libs = \
 	-lstdc++ \
 
+install:
+	([[ "$(DIR)" = /* ]] && [ -d $(DIR) ]) || (echo "$(DIR) is not a valid absolute path"; exit 1)
+	cp -v -r include/* $(DIR)
+
+install_dependencies:
+	([[ "$(DIR)" = /* ]] && [ -d $(DIR) ]) || (echo "$(DIR) is not a valid absolute path"; exit 1)
+	./configure
+	cd lib/unpadded && make install DIR=$(DIR) && make install_dependencies DIR=$(DIR)
+
 check11: obj/cpp11/main.o obj/lib/unity.o
 	gcc --coverage $^ $(libs) -o run_ut11
 	./run_ut11
