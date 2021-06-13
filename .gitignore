@@ -4,3 +4,6 @@ run_ut
 *.ini
 html
 latex
+include/*
+!include/1.0
+!include/2.0
