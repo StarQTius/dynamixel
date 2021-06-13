@@ -1,0 +1,14 @@
+#!/bin/sh
+mkdir -p obj obj/lib obj/cpp11 obj/cpp14 obj/cpp17
+git submodule init lib/unpadded
+[ "$1" = "dev" ] && git submodule init lib/Unity
+git submodule update --remote
+
+# configure submodules
+cd lib
+
+# configure unpadded
+cd unpadded
+make install_dependencies DIR=$(realpath ../../include)
+make mrproper
+cd ..
