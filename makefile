@@ -23,7 +23,8 @@ install:
 
 install_dependencies:
 	([[ "$(DIR)" = /* ]] && [ -d $(DIR) ]) || (echo "$(DIR) is not a valid absolute path"; exit 1)
-	./configure
+	git submodule init lib/unpadded
+	git submodule update --remote
 	cd lib/unpadded && make install DIR=$(DIR) && make install_dependencies DIR=$(DIR)
 
 check11: obj/cpp11/main.o obj/lib/unity.o
