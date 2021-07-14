@@ -6,3 +6,4 @@ html
 latex
 include/*
 !include/dxl
+src/
